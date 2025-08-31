@@ -103,11 +103,24 @@ function numfmt ( pattern, locale = 'en' ) {
 
       if ( ipos > p.group_pri ) {
         ret = cGroup + i.substr( ipos -= p.group_pri, p.group_pri ) + ret;
-      }
-      while ( ipos > gsize ) {
-        ret = cGroup + i.substr( ipos -= gsize, gsize ) + ret;
+        while ( ipos > gsize ) {
+          ret = cGroup + i.substr( ipos -= gsize, gsize ) + ret;
+        }
       }
       i = ipos ? i.substr( 0, ipos ) + ret : ret;
+
+      ret = '';
+      let fpos = 0;
+
+      if ( f.length - fpos > p.frac_pri ) {
+        ret = ret + f.substr( fpos, p.frac_pri ) + cGroup;
+        fpos += p.frac_pri;
+        while ( f.length - fpos > p.frac_sec ) {
+          ret = ret + f.substr( fpos, p.frac_sec ) + cGroup;
+          fpos += p.frac_sec;
+        }
+      }
+      f = fpos < f.length ? ret + f.substr( fpos, f.length - fpos ) : ret;
     }
 
     return p.prefix[ isNeg ] + i + ( f ? cDecimal + f : '' ) + p.suffix[ isNeg ];
@@ -180,19 +193,31 @@ function numfmt ( pattern, locale = 'en' ) {
   }
 
   if ( p.grouping ) {
-    const s = ( integer || '' ).split( ',' );
-    const sl = s.length;
-    if ( sl === 2 ) {
-      p.group_pri = p.group_sec = s[1].length;
+    const i = ( integer || '' ).split( ',' );
+    const il = i.length;
+    if ( il === 2 ) {
+      p.group_pri = p.group_sec = i[1].length;
     }
-    else if ( sl > 2 ) {
-      p.group_pri = s[ sl - 1 ].length;
-      p.group_sec = s[ sl - 2 ].length;
+    else if ( il > 2 ) {
+      p.group_pri = i[ il - 1 ].length;
+      p.group_sec = i[ il - 2 ].length;
+    }
+
+    const f = ( fraction || '' ).split( ',' );
+    const fl = f.length;
+    if ( fl === 2 ) {
+      p.frac_pri = p.frac_sec = f[0].length;
+    }
+    else if ( fl > 2 ) {
+      p.frac_pri = f[0].length;
+      p.frac_sec = f[1].length;
     }
   }
   else {
     p.group_pri = 0;
     p.group_sec = 0;
+    p.frac_pri = 0;
+    p.frac_sec = 0;
   }
 
   if ( p.exponent ) {
